@@ -1,47 +1,57 @@
+// Import the user schema from the Models directory
 const users = require("../Models/userSchema");
 
+// Controller function for user registration
 exports.register = async(req,res)=>{
-    // console.log("inside register controller function");
+    // Destructure the username, email, and password from the request body
     const {username,email,password} = req.body
+
     try{
+        // Check if a user with the provided email already exists in the database
         const existingUser = await users.findOne({email})
        
         if (existingUser){
+            // If a user with the email already exists, return a status 406 (Not Acceptable)
             res.status(406).json("Account already exist, Please Login...")
             
-        }
-        else
-        {   
+        } else {
+            // If the email is not in use, create a new user instance and save it to the database   
             const newUser = new users({
-                username,email,password
+                username,
+                email,
+                password
             })
             await newUser.save()
+
+            // Return a status 200 (OK) and the newly created user
             res.status(200).json(newUser)   
         }
-    
-    }
-    catch(err){
+    } catch(err) {
+        // If an error occurs during the registration process, return a status 401 (Unauthorized) with the error message
         res.status(401).json(`${err}`);
         
     }
 }
+
+// Controller function for user login
 exports.login = async(req,res)=>{
-    // console.log("inside login controller function");
+    // Destructure the email and password from the request body
     const {email,password} = req.body
+
     try{
+        // Find a user with the provided email and password in the database
         const existingUser = await users.findOne({email,password})
-        // const allUser = await users.find()
-        // console.log(allUser);
+        
         if (existingUser!== null && existingUser !== undefined){
-            // const token = jwt.sign({userid:existingUser._id},"ss9876")
-            // res.status(200).json({existingUser,token})
+             // If a matching user is found, return a status 200 (OK) with the user details
             res.status(200).json(existingUser)
             
-        }else{
+        } else {
+            // If no matching user is found, return a status 404 (Not Found) with an error message
             res.status(404).json(`incorrect Email / password`)
         }
-    }
-    catch(err){
+    } catch(err) {
+        // If an error occurs during the login process, return a status 401 (Unauthorized) with the error message
         res.status(401).json(`error:${err}`);
         
     }

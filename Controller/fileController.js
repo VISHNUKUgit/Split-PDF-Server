@@ -1,41 +1,56 @@
+// Importing the fileSchema model
 const files = require("../Models/fileSchema");
 
+// Controller function to add a file to the database
 exports.addFile= async(req,res)=>{
-    // console.log("inside Addfile function");
+    // Controller function to add a file to the database
+    const{ userId,title }=req.body
     
-    const{
-        userId,
-        title
-    }=req.body
-    
-    // console.log("1",req.file);
+    // Extracting filename from the uploaded file (if exists)
     const uploadFile = req.file?req.file.filename:"";
-    // console.log("2",uploadFile)
-   
     
     try {
+         // Creating a new file instance using the fileSchema model
         const addFile = new files({ 
             uploderId:userId,
             title:title,
-            files:uploadFile})
-        await addFile.save()
+            files:uploadFile
+        })
+
+        // Saving the file instance to the database
+        await addFile.save() 
+
+        // Sending a successful response with the added file information
         res.status(200).json(addFile)
     
     } catch (error) {
-        res.status(401).json(error)
+        // Sending an error response if there's an issue with the database operation
+
+        // Check if the error is a duplicate key error for the 'title' field
+    if (error.code === 11000 && error.keyPattern && error.keyPattern.title) {
+        // Sending a user-friendly error response for duplicate title
+        res.status(401).json({ error: "Upload failed, title should be unique" });
+    } else {
+        // Sending a general error response for other types of errors
+        res.status(401).json(error);
+    }
     }
 }
 
+// Controller function to get all files uploaded by a specific user
 exports.getUserPdfController = async(req,res)=>{
-    console.log("inside get-file function");
+    // Extracting userId from the request body
     const userId = req.body.id;
-    // console.log(userId);
-    try {
-        const allFile = await files.find({uploderId:userId})
-    res.status(200).json(allFile)
-    // console.log(allFile);
     
+    try {
+        // Finding all files in the database that belong to the specified user
+        const allFile = await files.find({uploderId:userId})
+
+        // Sending a successful response with the list of files
+        res.status(200).json(allFile)
+        
     } catch (error) {
+        // Sending an error response if there's an issue with the database operation
         res.status(401).json(error)
     }
 }
